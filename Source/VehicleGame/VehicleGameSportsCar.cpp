@@ -2,9 +2,20 @@
 
 
 #include "VehicleGameSportsCar.h"
+#include "VehicleGameSportsCar.h"
+#include "VehicleGameSportsCar.h"
 #include "VehicleGameSportsWheelFront.h"
 #include "VehicleGameSportsWheelRear.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
+#include "EnhancedInputComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/RectLightComponent.h"
+#include "Components/SpotLightComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+
+
 
 AVehicleGameSportsCar::AVehicleGameSportsCar()
 {
@@ -66,4 +77,105 @@ AVehicleGameSportsCar::AVehicleGameSportsCar()
 	// NOTE: Check the Blueprint asset for the Steering Curve
 	GetChaosVehicleMovement()->SteeringSetup.SteeringType = ESteeringType::Ackermann;
 	GetChaosVehicleMovement()->SteeringSetup.AngleRatio = 0.7f;
+
+
+
+	HeadlightLeft = CreateDefaultSubobject<USpotLightComponent>("LeftHeadLight");
+	HeadlightLeft->SetupAttachment(GetMesh());
+
+	HeadlightRight = CreateDefaultSubobject<USpotLightComponent>("RightHeadLight");
+	HeadlightRight->SetupAttachment(GetMesh());
+
+	UnderCarIllumination = CreateDefaultSubobject<URectLightComponent>("UnderCarIllumination");
+	UnderCarIllumination->SetupAttachment(GetMesh());
+
+	LeftBooster = CreateDefaultSubobject<UNiagaraComponent>("BoosterLeft");
+	LeftBooster->SetupAttachment(GetMesh());
+
+	RightBooster = CreateDefaultSubobject<UNiagaraComponent>("BoosterRight");
+	RightBooster->SetupAttachment(GetMesh());
+	
+}
+
+void AVehicleGameSportsCar::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	ChangeBackSpringArmLength(DeltaSeconds);
+	ChangeFOV(DeltaSeconds);
+
+}
+
+void AVehicleGameSportsCar::ChangeBackSpringArmLength(float Delta)
+{
+	if(IsBoosting)
+	{
+		GetBackSpringArm()->TargetArmLength = FMath::Lerp(GetBackSpringArm()->TargetArmLength, BoostSpringArmLength, SpringArmLerpSpeed * Delta);
+	}
+	else
+	{
+		GetBackSpringArm()->TargetArmLength = FMath::Lerp(GetBackSpringArm()->TargetArmLength, DefaultSpringArmLength, SpringArmLerpSpeed * Delta);
+	}
+}
+
+void AVehicleGameSportsCar::ChangeFOV(float Delta)
+{
+	if (IsBoosting)
+	{
+		GetBackCamera()->FieldOfView = FMath::Lerp(GetBackCamera()->FieldOfView, BoostFOV, FOVLerpSpeed * Delta);
+	}
+	else
+	{
+		GetBackCamera()->FieldOfView = FMath::Lerp(GetBackCamera()->FieldOfView, DefaultFOV, FOVLerpSpeed * Delta);
+	}
+}
+
+void AVehicleGameSportsCar::ToggleBooster(bool Activate)
+{
+	if(Activate)
+	{
+		LeftBooster->Activate();
+		RightBooster->Activate();
+	}
+	else
+	{
+		LeftBooster->Deactivate();
+		RightBooster->Deactivate();
+	}
+	
+	
+}
+
+void AVehicleGameSportsCar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		EnhancedInputComponent->BindAction(BoostAction, ETriggerEvent::Triggered, this, &AVehicleGameSportsCar::Boost);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("'%s' Failed to find an Enhanced Input component."), *GetNameSafe(this));
+	}
+	
+
+
+}
+
+void AVehicleGameSportsCar::Boost(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Display, TEXT("%i"), Value.Get<bool>())
+
+	bool BoostInput = Value.Get<bool>();
+	if(BoostInput)
+	{
+		IsBoosting = true;
+		GetMesh()->AddForce(GetMesh()->GetForwardVector()*BoostAmount,NAME_None,true);
+	}
+	else
+	{
+		IsBoosting = false;
+	}
+	ToggleBooster(BoostInput);
 }
