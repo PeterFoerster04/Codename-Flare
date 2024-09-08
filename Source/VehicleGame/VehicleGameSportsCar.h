@@ -6,6 +6,7 @@
 #include "VehicleGamePawn.h"
 #include "VehicleGameSportsCar.generated.h"
 
+class UPostProcessComponent;
 class URectLightComponent;
 class USpotLightComponent;
 class UNiagaraComponent;
@@ -24,6 +25,7 @@ public:
 	AVehicleGameSportsCar();
 
 	virtual void Tick(float DeltaSeconds) override;
+	virtual void BeginPlay() override;
 
 protected:
 
@@ -62,19 +64,30 @@ protected:
 
 
 
-
-
-
 	UPROPERTY(EditAnywhere, Category = Booster, meta = (AllowPrivateAccess))
 	bool IsBoosting;
 	UPROPERTY(EditAnywhere, Category = Booster, meta = (AllowPrivateAccess))
 	float BoostAmount = 500.0f;
+
+	UPROPERTY(EditAnywhere, Category = CameraEffect, meta = (AllowPrivateAccess))
+	float DefaultFringe = 0.0f;
+	UPROPERTY(EditAnywhere, Category = CameraEffect, meta = (AllowPrivateAccess))
+	float DefaultVignette = 0.0f;
+
+
+	UPROPERTY(EditAnywhere, Category = CameraEffect, meta = (AllowPrivateAccess))
+	float BoostFringe = 5.0f;
+	UPROPERTY(EditAnywhere, Category = CameraEffect, meta = (AllowPrivateAccess))
+	float BoostVignette = 10.0f;
+	UPROPERTY(EditAnywhere, Category = CameraEffect, meta = (AllowPrivateAccess))
+	float EffectLerpSpeed = 2.0f;
 
 
 	//functions
 
 	void ChangeBackSpringArmLength(float Delta);
 	void ChangeFOV(float Delta);
+	void ChangeCameraEffects(float Delta);
 	void ToggleBooster(bool Activate);
 
 

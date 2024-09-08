@@ -14,7 +14,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
-
+#include "Components/PostProcessComponent.h"
 
 
 AVehicleGameSportsCar::AVehicleGameSportsCar()
@@ -94,6 +94,7 @@ AVehicleGameSportsCar::AVehicleGameSportsCar()
 
 	RightBooster = CreateDefaultSubobject<UNiagaraComponent>("BoosterRight");
 	RightBooster->SetupAttachment(GetMesh());
+
 	
 }
 
@@ -102,7 +103,18 @@ void AVehicleGameSportsCar::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	ChangeBackSpringArmLength(DeltaSeconds);
+	ChangeCameraEffects(DeltaSeconds);
 	ChangeFOV(DeltaSeconds);
+
+}
+
+void AVehicleGameSportsCar::BeginPlay()
+{
+	Super::BeginPlay();
+	GetBackCamera()->PostProcessSettings.bOverride_SceneFringeIntensity = true;
+	GetBackCamera()->PostProcessSettings.bOverride_VignetteIntensity = true;
+	GetFollowCamera()->PostProcessSettings.bOverride_SceneFringeIntensity = true;
+	GetFollowCamera()->PostProcessSettings.bOverride_VignetteIntensity = true;
 
 }
 
@@ -127,6 +139,24 @@ void AVehicleGameSportsCar::ChangeFOV(float Delta)
 	else
 	{
 		GetBackCamera()->FieldOfView = FMath::Lerp(GetBackCamera()->FieldOfView, DefaultFOV, FOVLerpSpeed * Delta);
+	}
+}
+
+void AVehicleGameSportsCar::ChangeCameraEffects(float Delta)
+{
+	if(IsBoosting)
+	{
+		GetBackCamera()->PostProcessSettings.VignetteIntensity = FMath::Lerp(GetBackCamera()->PostProcessSettings.VignetteIntensity, BoostVignette, EffectLerpSpeed * Delta);
+		GetBackCamera()->PostProcessSettings.SceneFringeIntensity = FMath::Lerp(GetBackCamera()->PostProcessSettings.SceneFringeIntensity, BoostFringe, EffectLerpSpeed * Delta);
+		GetFollowCamera()->PostProcessSettings.VignetteIntensity = FMath::Lerp(GetBackCamera()->PostProcessSettings.VignetteIntensity, BoostVignette, EffectLerpSpeed * Delta);
+		GetFollowCamera()->PostProcessSettings.SceneFringeIntensity = FMath::Lerp(GetBackCamera()->PostProcessSettings.SceneFringeIntensity, BoostFringe, EffectLerpSpeed * Delta);
+	}
+	else
+	{
+		GetBackCamera()->PostProcessSettings.VignetteIntensity = FMath::Lerp(GetBackCamera()->PostProcessSettings.VignetteIntensity, DefaultVignette, EffectLerpSpeed * Delta);
+		GetBackCamera()->PostProcessSettings.SceneFringeIntensity = FMath::Lerp(GetBackCamera()->PostProcessSettings.SceneFringeIntensity, DefaultFringe, EffectLerpSpeed * Delta);
+		GetFollowCamera()->PostProcessSettings.VignetteIntensity = FMath::Lerp(GetBackCamera()->PostProcessSettings.VignetteIntensity, DefaultVignette, EffectLerpSpeed * Delta);
+		GetFollowCamera()->PostProcessSettings.SceneFringeIntensity = FMath::Lerp(GetBackCamera()->PostProcessSettings.SceneFringeIntensity, DefaultFringe, EffectLerpSpeed * Delta);
 	}
 }
 
