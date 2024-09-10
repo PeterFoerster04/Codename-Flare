@@ -2,8 +2,6 @@
 
 
 #include "VehicleGameSportsCar.h"
-#include "VehicleGameSportsCar.h"
-#include "VehicleGameSportsCar.h"
 #include "VehicleGameSportsWheelFront.h"
 #include "VehicleGameSportsWheelRear.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
@@ -105,6 +103,7 @@ void AVehicleGameSportsCar::Tick(float DeltaSeconds)
 	ChangeBackSpringArmLength(DeltaSeconds);
 	ChangeCameraEffects(DeltaSeconds);
 	ChangeFOV(DeltaSeconds);
+	UpdateKMDriven(DeltaSeconds);
 
 }
 
@@ -115,6 +114,9 @@ void AVehicleGameSportsCar::BeginPlay()
 	GetBackCamera()->PostProcessSettings.bOverride_VignetteIntensity = true;
 	GetFollowCamera()->PostProcessSettings.bOverride_SceneFringeIntensity = true;
 	GetFollowCamera()->PostProcessSettings.bOverride_VignetteIntensity = true;
+
+	LastPosition = GetMesh()->GetComponentLocation();
+
 
 }
 
@@ -174,6 +176,17 @@ void AVehicleGameSportsCar::ToggleBooster(bool Activate)
 	}
 	
 	
+}
+
+void AVehicleGameSportsCar::UpdateKMDriven(float Delta)
+{
+	if (GetMesh()->GetPhysicsLinearVelocity().Length() <= 0.1f) return;
+	//convert from m to km
+	DrivenKM += (FVector::Distance(GetMesh()->GetComponentLocation(), LastPosition) * Delta)*0.001f;
+	LastPosition = GetMesh()->GetComponentLocation();
+
+
+
 }
 
 void AVehicleGameSportsCar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

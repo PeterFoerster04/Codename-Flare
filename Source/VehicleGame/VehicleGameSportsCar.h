@@ -82,6 +82,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = CameraEffect, meta = (AllowPrivateAccess))
 	float EffectLerpSpeed = 2.0f;
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly ,Category = Stats, meta = (AllowPrivateAccess))
+	float DrivenKM;
+	FVector LastPosition;
+
+
+
 
 	//functions
 
@@ -89,6 +95,7 @@ protected:
 	void ChangeFOV(float Delta);
 	void ChangeCameraEffects(float Delta);
 	void ToggleBooster(bool Activate);
+	void UpdateKMDriven(float Delta);
 
 
 
